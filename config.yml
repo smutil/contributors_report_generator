@@ -1,0 +1,8 @@
+global:
+  username: xxxxxxx
+  password: ********
+git:
+  - url: https://github.com/xxxx/release_metrics_generator.git
+  - url: https://github.com/xxxx/fileuploader.git
+  - url: https://github.com/xxxx/fileviewer.git
+

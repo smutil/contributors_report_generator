@@ -4,6 +4,9 @@
 *.dll
 *.so
 *.dylib
+contributors_report_generator
+contributors_report.xlsx
+testconfig.yml
 
 # Test binary, built with `go test -c`
 *.test

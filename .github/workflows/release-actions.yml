@@ -1,0 +1,49 @@
+name: release-actions
+on:
+  create:
+    tags:
+      - v*
+jobs:
+    # The "build" workflow
+    release:
+      # The type of runner that the job will run on
+      runs-on: ubuntu-latest
+  
+      # Steps represent a sequence of tasks that will be executed as part of the job
+      steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      - name: Get the version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
+      # Setup Go
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.14.0' # The Go version to download (if necessary) and use.
+          
+      # Run build of the application
+      - name: build
+        run: go build .
+      - name: package
+        run: tar -czvf release_metrics_generator.tar.gz release_metrics_generator
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+            tag_name: ${{ steps.get_version.outputs.VERSION }}
+            release_name: Release ${{ steps.get_version.outputs.VERSION }}
+            draft: false
+            prerelease: false
+      - name: Upload Release Asset
+        id: upload-release-asset 
+        uses: actions/upload-release-asset@v1
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+            upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+            asset_path: release_metrics_generator.tar.gz
+            asset_name: release_metrics_generator.tar.gz
+            asset_content_type: application/tar
