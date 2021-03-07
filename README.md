@@ -6,7 +6,7 @@ Usage
 -----
  step 1. download contributors_report_generator from <a href=https://github.com/smutil/contributors_report_generator/releases>releases</a> and extract the tarball.
  
- step 2. create [config.yml](https://github.com/smutil/rcontributors_report_generator/config.yml). If config.yaml and contributors_report_generator is not in same location, you can provide the config.yml path using --config
+ step 2. create [config.yml](https://github.com/smutil/contributors_report_generator/config.yml). If config.yaml and contributors_report_generator is not in same location, you can provide the config.yml path using --config
  
  step 3. execute the contributors_report_generator as shown below. 
  
