@@ -37,11 +37,17 @@ type CommitAuthor struct {
 	Email       string
 	CommitCount int
 }
-
+var Version = "develop"
 func main() {
 	var configPath string
+	var version bool
+	flag.BoolVar(&version, "version", false, "returns the fileuploader version")
 	flag.StringVar(&configPath, "config", "./config.yml", "path to config file")
 	flag.Parse()
+	if version {
+		fmt.Println(Version)
+		return
+	}
 	// Validate the path first
 	if err := ValidateConfigPath(configPath); err != nil {
 		log.Fatal(err)

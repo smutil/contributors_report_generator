@@ -24,9 +24,11 @@ jobs:
           
       # Run build of the application
       - name: build
-        run: go build .
+        run: go build -ldflags="-X 'main.Version=${{ steps.get_version.outputs.VERSION }}'" .
+      - name: test version
+        run: ./contributors_report_generator -version
       - name: package
-        run: tar -czvf release_metrics_generator.tar.gz release_metrics_generator
+        run: tar -czvf contributors_report_generator.tar.gz contributors_report_generator
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -44,6 +46,6 @@ jobs:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
             upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-            asset_path: release_metrics_generator.tar.gz
-            asset_name: release_metrics_generator.tar.gz
+            asset_path: contributors_report_generator.tar.gz
+            asset_name: contributors_report_generator.tar.gz
             asset_content_type: application/tar

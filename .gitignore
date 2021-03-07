@@ -7,7 +7,7 @@
 contributors_report_generator
 contributors_report.xlsx
 testconfig.yml
-DS_Store
+.DS_Store
 
 # Test binary, built with `go test -c`
 *.test
