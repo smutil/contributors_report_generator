@@ -7,7 +7,17 @@ jobs:
     # The "build" workflow
     release:
       # The type of runner that the job will run on
-      runs-on: ubuntu-latest
+      strategy:
+        matrix:
+          os: [macos-latest, ubuntu-latest, windows-latest]
+          include:
+          - os: macos-latest
+            TARGET: mac
+          - os: ubuntu-latest
+            TARGET: linux
+          - os: windows-latest
+            TARGET: win
+      runs-on: ${{ matrix.os }}
   
       # Steps represent a sequence of tasks that will be executed as part of the job
       steps:
@@ -27,10 +37,15 @@ jobs:
         run: go build -ldflags="-X 'main.Version=${{ steps.get_version.outputs.VERSION }}'" .
       - name: test version
         run: ./contributors_report_generator -version
-      - name: package
-        run: tar -czvf contributors_report_generator.tar.gz contributors_report_generator
+      - name: package-linux-mac
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
+        run: tar -czvf contributors_report_generator-${{ matrix.TARGET }}.tar.gz contributors_report_generator
+      - name: package-win
+        if: matrix.os == 'windows-latest'
+        run: tar -czvf contributors_report_generator-${{ matrix.TARGET }}.tar.gz contributors_report_generator.exe
       - name: Create Release
         id: create_release
+        if: matrix.os == 'ubuntu-latest'
         uses: actions/create-release@v1
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -41,11 +56,12 @@ jobs:
             prerelease: false
       - name: Upload Release Asset
         id: upload-release-asset 
+        if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-release-asset@v1
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
             upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-            asset_path: contributors_report_generator.tar.gz
-            asset_name: contributors_report_generator.tar.gz
+            asset_path: contributors_report_generator-${{ matrix.TARGET }}.tar.gz
+            asset_name: contributors_report_generator-${{ matrix.TARGET }}.tar.gz
             asset_content_type: application/tar
