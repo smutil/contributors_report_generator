@@ -34,10 +34,6 @@ jobs:
         run: go build -ldflags="-X 'main.Version=${{ steps.get_version.outputs.VERSION }}'" .
       - name: test version
         run: ./contributors_report_generator -version
-      - name: package-linux-mac
-        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
-        run: tar -czvf contributors_report_generator-${{ matrix.TARGET }}.tar.gz contributors_report_generator
-      - name: package-win
-        if: matrix.os == 'windows-latest'
-        run: tar -czvf contributors_report_generator-${{ matrix.TARGET }}.tar.gz contributors_report_generator.exe
+
+      
 

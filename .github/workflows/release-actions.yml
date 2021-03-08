@@ -4,8 +4,7 @@ on:
     tags:
       - v*
 jobs:
-    # The "build" workflow
-    release:
+    package:
       # The type of runner that the job will run on
       strategy:
         matrix:
@@ -43,9 +42,23 @@ jobs:
       - name: package-win
         if: matrix.os == 'windows-latest'
         run: tar -czvf contributors_report_generator-${{ matrix.TARGET }}.tar.gz contributors_report_generator.exe
+      - name: Archive artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: contributors_report_generator-${{ matrix.TARGET }}.tar.gz
+          path: contributors_report_generator-${{ matrix.TARGET }}.tar.gz
+    release:
+      needs: package
+      runs-on: ubuntu-latest
+      steps:
+      - uses: actions/checkout@v2
+      - name: Get the version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
+      - name: Download all artifacts
+        uses: actions/download-artifact@v2
       - name: Create Release
         id: create_release
-        if: matrix.os == 'ubuntu-latest'
         uses: actions/create-release@v1
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -54,14 +67,33 @@ jobs:
             release_name: Release ${{ steps.get_version.outputs.VERSION }}
             draft: false
             prerelease: false
-      - name: Upload Release Asset
-        id: upload-release-asset 
-        if: matrix.os == 'ubuntu-latest'
+      - name: Upload linux artifact
+        id: upload-release-asset-lnx
         uses: actions/upload-release-asset@v1
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
             upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-            asset_path: contributors_report_generator-${{ matrix.TARGET }}.tar.gz
-            asset_name: contributors_report_generator-${{ matrix.TARGET }}.tar.gz
+            asset_path: contributors_report_generator-linux.tar.gz
+            asset_name: contributors_report_generator-linux.tar.gz
+            asset_content_type: application/tar
+      - name: Upload macos artifact
+        id: upload-release-asset-mac 
+        uses: actions/upload-release-asset@v1
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+            upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+            asset_path: contributors_report_generator-macos.tar.gz
+            asset_name: contributors_report_generator-macos.tar.gz
+            asset_content_type: application/tar
+      - name: Upload windows artifact
+        id: upload-release-asset-win
+        uses: actions/upload-release-asset@v1
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+            upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+            asset_path: contributors_report_generator-win.tar.gz
+            asset_name: contributors_report_generator-win.tar.gz
             asset_content_type: application/tar
