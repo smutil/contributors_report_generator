@@ -14,6 +14,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"time"
 )
 
 type Config struct {
@@ -24,6 +25,7 @@ type Config struct {
 type Global struct {
 	Username string `yaml:"username"`
 	Password string `yaml:"password"`
+	Since    string `yaml:"since"`
 }
 
 type Git struct {
@@ -37,7 +39,9 @@ type CommitAuthor struct {
 	Email       string
 	CommitCount int
 }
+
 var Version = "develop"
+
 func main() {
 	var configPath string
 	var version bool
@@ -65,9 +69,10 @@ func main() {
 }
 
 func generateMetrics(config Config) {
-	var scm_repo, scm_usr, scm_pwd string
+	var scm_repo, scm_usr, scm_pwd, since string
 	scm_usr = config.Global.Username
 	scm_pwd = config.Global.Password
+	since = config.Global.Since
 	var m = make(map[string]CommitAuthor)
 
 	for _, gitrepo := range config.GitRepoList {
@@ -85,7 +90,16 @@ func generateMetrics(config Config) {
 		} else {
 			// ... retrieving all commits
 			ref, _ := r.Head()
-			cIter, _ := r.Log(&git.LogOptions{From: ref.Hash()})
+			if since == "" {
+				since = "02.01.2006"
+			}
+			since, err := time.Parse("02.01.2006", since)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			cIter, _ := r.Log(&git.LogOptions{From: ref.Hash(), Since: &since})
+
 			cIter.ForEach(func(c *object.Commit) error {
 				var i = m[c.Author.Email].CommitCount
 				if i == 0 {
@@ -102,32 +116,32 @@ func generateMetrics(config Config) {
 	f := excelize.NewFile()
 
 	// define the border style
-    border := []excelize.Border{
-        {Type: "top", Style: 2, Color: "cccccc"},
-        {Type: "left", Style: 2, Color: "cccccc"},
-        {Type: "right", Style: 2, Color: "cccccc"},
-        {Type: "bottom", Style: 2, Color: "cccccc"},
-    }
+	border := []excelize.Border{
+		{Type: "top", Style: 2, Color: "cccccc"},
+		{Type: "left", Style: 2, Color: "cccccc"},
+		{Type: "right", Style: 2, Color: "cccccc"},
+		{Type: "bottom", Style: 2, Color: "cccccc"},
+	}
 	// define the style of the header row
-    headerStyle, err := f.NewStyle(&excelize.Style{
-        Font: &excelize.Font{Bold: true},
-        Fill: excelize.Fill{
-            Type: "pattern", Color: []string{"dae9f3"}, Pattern: 1},
-        Border: border},
-    ) 
+	headerStyle, err := f.NewStyle(&excelize.Style{
+		Font: &excelize.Font{Bold: true},
+		Fill: excelize.Fill{
+			Type: "pattern", Color: []string{"dae9f3"}, Pattern: 1},
+		Border: border},
+	)
 	if err != nil {
-        fmt.Println(err)
-        return
-    }
-	 // define the style of cells
-	cellsStyle, err := f.NewStyle(&excelize.Style{
-        Font:   &excelize.Font{Color: "333333"},
-        Border: border}); 
-		
-	if err != nil {
-        fmt.Println(err)
+		fmt.Println(err)
 		return
-    }
+	}
+	// define the style of cells
+	cellsStyle, err := f.NewStyle(&excelize.Style{
+		Font:   &excelize.Font{Color: "333333"},
+		Border: border})
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	var i int = 1
 	f.SetCellValue("Sheet1", "A1", "Name")
 	f.SetCellValue("Sheet1", "B1", "Email")
