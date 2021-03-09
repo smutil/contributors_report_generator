@@ -1,5 +1,8 @@
 name: build-actions
-on: [push]
+on:
+  create:
+    tags:
+      - v*
 jobs:
     # The "build" workflow
     build:
