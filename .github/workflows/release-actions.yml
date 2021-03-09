@@ -1,5 +1,8 @@
 name: release-actions
-on: [push]
+on:
+  create:
+    tags:
+      - v*
 jobs:
     package:
       # The type of runner that the job will run on
@@ -58,4 +61,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          hub release edit $(find . -type f -name "*.tar.gz" -printf "-a %p ") -m "" "v1.2"
+          hub release create $(find . -type f -name "*.tar.gz" -printf "-a %p ") -m "${{ steps.get_version.outputs.VERSION }}" ${{ steps.get_version.outputs.VERSION }}
